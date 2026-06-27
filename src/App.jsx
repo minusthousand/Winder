@@ -124,7 +124,7 @@ function LoginSheet({ onClose, onSuccess }) {
 }
 
 // ---- Settings sheet ----
-function SettingsSheet({ isAdmin, onClose, onLoginOpen, onAddOpen, onLogout }) {
+function SettingsSheet({ isAdmin, onClose, onLoginOpen, onAddOpen, onManageOpen, onLogout }) {
   const [closing, setClosing] = useState(false);
 
   const dismiss = useCallback(() => {
@@ -167,6 +167,17 @@ function SettingsSheet({ isAdmin, onClose, onLoginOpen, onAddOpen, onLogout }) {
               Add a profile
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cbb9d2" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto' }}><path d="M9 18l6-6-6-6"/></svg>
             </button>
+            <button onClick={onManageOpen} className="w-full flex items-center gap-[13px] p-[14px] mt-[10px] border-none rounded-[15px] cursor-pointer text-left"
+              style={{ background: '#fbf3f6', color: '#3a2740', fontSize: 14.5, fontWeight: 600 }}>
+              <span className="w-9 h-9 rounded-[11px] flex items-center justify-center flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg,#FF7854,#FD267A)', color: '#fff' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </span>
+              Edit profiles
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cbb9d2" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto' }}><path d="M9 18l6-6-6-6"/></svg>
+            </button>
             <button onClick={onLogout} className="w-full flex items-center gap-[13px] p-[14px] mt-[10px] border-none rounded-[15px] cursor-pointer text-left"
               style={{ background: '#fff5f6', color: '#FF4F6B', fontSize: 14.5, fontWeight: 600 }}>
               <span className="w-9 h-9 rounded-[11px] flex items-center justify-center flex-shrink-0"
@@ -196,6 +207,63 @@ function SettingsSheet({ isAdmin, onClose, onLoginOpen, onAddOpen, onLogout }) {
             </button>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ---- Manage profiles sheet ----
+function ManageProfilesSheet({ profiles, onClose, onEdit }) {
+  const [closing, setClosing] = useState(false);
+
+  const dismiss = useCallback(() => {
+    setClosing(true);
+    setTimeout(onClose, 280);
+  }, [onClose]);
+
+  const { grabProps, panelTranslate } = useGrabClose(dismiss);
+
+  return (
+    <div onClick={dismiss} className={`absolute inset-0 z-50 flex items-end ${closing ? 'animate-mwFadeOut' : 'animate-mwFade'}`}
+      style={{ background: 'rgba(28,14,30,.5)', backdropFilter: 'blur(3px)' }}>
+      <div onClick={(e) => e.stopPropagation()}
+        className={`hide-scrollbar w-full overflow-y-auto ${closing ? 'animate-mwSheetOut' : 'animate-mwSheet'}`}
+        style={{ translate: panelTranslate, maxHeight: '80%', background: '#fff', borderRadius: '26px 26px 0 0', padding: '22px 22px 30px' }}>
+        <div {...grabProps} className="flex justify-center items-center cursor-grab touch-none" style={{ height: 26, margin: '-8px 0 6px' }}>
+          <div style={{ width: 42, height: 5, borderRadius: 99, background: '#eadfe4' }} />
+        </div>
+        <div className="flex items-center justify-between mb-[16px]">
+          <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: 21, color: '#3a2740' }}>Edit profiles</div>
+          <button onClick={dismiss} className="w-[34px] h-[34px] rounded-full border-none flex items-center justify-center cursor-pointer"
+            style={{ background: '#f6eef1', color: '#9b8aa3' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {profiles.map((p) => (
+            <button key={p.id} onClick={() => onEdit(p)}
+              className="w-full flex items-center gap-[13px] border-none rounded-[15px] cursor-pointer text-left"
+              style={{ background: '#fbf3f6', padding: '10px 14px' }}>
+              <div style={{
+                width: 46, height: 46, borderRadius: 13, flexShrink: 0,
+                backgroundImage: `url("${p.images[0]}")`, backgroundSize: 'cover', backgroundPosition: 'center',
+              }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 14.5, color: '#3a2740' }}>{p.name}, {p.age}</div>
+                <div style={{ fontSize: 12.5, color: '#9b8aa3', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.job}</div>
+              </div>
+              {p.likesYou && (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FD267A" style={{ flexShrink: 0 }}>
+                  <path d="M12 21s-8.5-5.6-8.5-11.2A4.8 4.8 0 0 1 12 6.5a4.8 4.8 0 0 1 8.5 3.3C20.5 15.4 12 21 12 21z"/>
+                </svg>
+              )}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbb9d2" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -250,6 +318,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [manageOpen, setManageOpen] = useState(false);
   const [detailProfile, setDetailProfile] = useState(null);
   const [editProfile, setEditProfile] = useState(null);
   const [detailStartIndex, setDetailStartIndex] = useState(0);
@@ -416,6 +485,13 @@ export default function App() {
           onDelete={onDeleteProfile}
         />
       )}
+      {manageOpen && (
+        <ManageProfilesSheet
+          profiles={profiles}
+          onClose={() => setManageOpen(false)}
+          onEdit={(p) => { setManageOpen(false); setEditProfile(p); }}
+        />
+      )}
       <MatchScreen profile={matchProfile} onClose={() => setMatchProfile(null)} />
       {settingsOpen && (
         <SettingsSheet
@@ -423,6 +499,7 @@ export default function App() {
           onClose={() => setSettingsOpen(false)}
           onLoginOpen={() => { setSettingsOpen(false); setLoginOpen(true); }}
           onAddOpen={() => { setSettingsOpen(false); setAddOpen(true); }}
+          onManageOpen={() => { setSettingsOpen(false); setManageOpen(true); }}
           onLogout={() => { ls.rm('mw_admin'); setIsAdmin(false); setSettingsOpen(false); }}
         />
       )}
