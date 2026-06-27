@@ -44,6 +44,31 @@ export async function insertProfile(profile) {
   return toProfile(data);
 }
 
+export async function updateProfile(id, data) {
+  const { data: row, error } = await supabase
+    .from('profiles')
+    .update({
+      name: data.name,
+      age: data.age,
+      likes_you: data.likesYou,
+      job: data.job,
+      location: data.location,
+      bio: data.bio,
+      interests: data.interests,
+      images: data.images,
+    })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return toProfile(row);
+}
+
+export async function deleteProfile(id) {
+  const { error } = await supabase.from('profiles').delete().eq('id', id);
+  if (error) throw error;
+}
+
 export async function uploadImage(file) {
   const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;

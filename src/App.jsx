@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { SEED_PROFILES } from './data/seed';
-import { fetchProfiles, insertProfile, seedProfiles } from './lib/db';
+import { fetchProfiles, insertProfile, seedProfiles, updateProfile, deleteProfile } from './lib/db';
 import CardStack from './components/CardStack';
 import ProfileModal from './components/ProfileModal';
 import AddProfileForm from './components/AddProfileForm';
+import EditProfileForm from './components/EditProfileForm';
 import ControlButtons from './components/ControlButtons';
 
 // ---- localStorage helpers ----
@@ -250,6 +251,7 @@ export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [detailProfile, setDetailProfile] = useState(null);
+  const [editProfile, setEditProfile] = useState(null);
   const [detailStartIndex, setDetailStartIndex] = useState(0);
   const [matchProfile, setMatchProfile] = useState(null);
 
@@ -308,6 +310,26 @@ export default function App() {
       setProfiles((prev) => [profile, ...prev]);
     }
     setAddOpen(false);
+  };
+
+  const onEditProfile = async (updated) => {
+    try {
+      const saved = await updateProfile(updated.id, updated);
+      setProfiles((prev) => prev.map((p) => p.id === saved.id ? saved : p));
+    } catch {
+      setProfiles((prev) => prev.map((p) => p.id === updated.id ? updated : p));
+    }
+    setEditProfile(null);
+  };
+
+  const onDeleteProfile = async (id) => {
+    try { await deleteProfile(id); } catch { /* ignore, remove locally anyway */ }
+    setProfiles((prev) => prev.filter((p) => p.id !== id));
+    const newIndex = Math.min(index, profiles.length - 2);
+    ls.set('mw_index', newIndex);
+    setIndex(newIndex);
+    setEditProfile(null);
+    setDetailProfile(null);
   };
 
   const openDetail = (profile, startIndex) => { setDetailProfile(profile); setDetailStartIndex(startIndex || 0); };
@@ -382,6 +404,16 @@ export default function App() {
           onClose={closeDetail}
           onNope={detailNope}
           onLike={detailLike}
+          isAdmin={isAdmin}
+          onEdit={(p) => { setDetailProfile(null); setEditProfile(p); }}
+        />
+      )}
+      {editProfile && (
+        <EditProfileForm
+          profile={editProfile}
+          onClose={() => setEditProfile(null)}
+          onSave={onEditProfile}
+          onDelete={onDeleteProfile}
         />
       )}
       <MatchScreen profile={matchProfile} onClose={() => setMatchProfile(null)} />

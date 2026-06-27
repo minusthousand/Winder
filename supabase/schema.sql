@@ -16,3 +16,5 @@ alter table profiles enable row level security;
 
 create policy "public read"   on profiles for select using (true);
 create policy "public insert" on profiles for insert with check (true);
+create policy "public update" on profiles for update using (true);
+create policy "public delete" on profiles for delete using (true);
