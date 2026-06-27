@@ -15,6 +15,7 @@ let slotId = 0;
 export default function AddProfileForm({ onClose, onAdd }) {
   const [form, setForm] = useState({ name: '', age: '', bio: '', job: '', location: '', interests: '' });
   const [slots, setSlots] = useState([]); // { id, url, uploading, error }
+  const [likesYou, setLikesYou] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -76,7 +77,7 @@ export default function AddProfileForm({ onClose, onAdd }) {
       id: Date.now(),
       name: form.name.trim(),
       age: parseInt(form.age, 10) || 25,
-      likesYou: true,
+      likesYou,
       job: form.job.trim() || 'Mystery profession',
       location: form.location.trim() || 'Nearby',
       distance: Math.floor(Math.random() * 18) + 1,
@@ -181,6 +182,17 @@ export default function AddProfileForm({ onClose, onAdd }) {
 
         <label style={labelStyle}>Interests <span style={{ color: '#c3b4cb', fontWeight: 500 }}>· comma separated</span></label>
         <input value={form.interests} onInput={set('interests')} placeholder="Coffee, Travel, Live music" style={inputStyle} />
+
+        <label style={labelStyle}>Match</label>
+        <button onClick={() => setLikesYou((v) => !v)}
+          style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '12px 14px', border: '1.5px solid #f0e3e9', borderRadius: 13, background: '#fdfafb', cursor: 'pointer', textAlign: 'left' }}>
+          <div style={{ width: 44, height: 26, borderRadius: 13, position: 'relative', background: likesYou ? '#FD267A' : '#e0d0e8', transition: 'background .2s', flexShrink: 0 }}>
+            <div style={{ position: 'absolute', top: 3, left: likesYou ? 21 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,.18)', transition: 'left .2s' }} />
+          </div>
+          <span style={{ fontSize: 14, fontWeight: 600, color: likesYou ? '#FD267A' : '#9b8aa3' }}>
+            {likesYou ? 'Triggers a match when swiped right' : 'No match when swiped right'}
+          </span>
+        </button>
 
         {error && <div style={{ color: '#FF4F6B', fontSize: 12.5, fontWeight: 600, marginTop: 10 }}>{error}</div>}
 
