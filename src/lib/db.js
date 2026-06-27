@@ -44,6 +44,15 @@ export async function insertProfile(profile) {
   return toProfile(data);
 }
 
+export async function uploadImage(file) {
+  const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await supabase.storage.from('profile-images').upload(path, file);
+  if (error) throw error;
+  const { data } = supabase.storage.from('profile-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export async function seedProfiles(seeds) {
   const rows = seeds.map((p) => ({
     name: p.name,
