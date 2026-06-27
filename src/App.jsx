@@ -315,16 +315,8 @@ export default function App() {
     }}>
       {/* Header */}
       <div className="flex items-center justify-between flex-shrink-0" style={{ padding: '16px 18px 10px' }}>
-        <div className="flex items-center gap-[9px]">
-          <div className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg,#FF7854 0%,#FD267A 100%)', boxShadow: '0 6px 16px rgba(253,38,122,.35)' }}>
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="#fff">
-              <path d="M13.5 1.5c.3 3-1.4 4.6-2.8 6C9 9 7.5 10.7 7.5 13.4 7.5 17 10.4 19.5 13 19.5c-1-1.4-1.2-2.8-.5-4 .5-.9 1.4-1.6 2.2-2.6 1.3-1.6 1.8-3.4 1.3-5.3 1.6 1.1 3 3.2 3 6.1 0 4.4-3.6 8-8 8s-8-3.4-8-8.2C3 7.9 8.4 5.6 9.3 1c.2.9 2 2.4 4.2.5z"/>
-            </svg>
-          </div>
-          <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, fontSize: 21, letterSpacing: '-.3px', background: 'linear-gradient(135deg,#FF7854,#FD267A)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
-            winder
-          </div>
+        <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, fontSize: 21, letterSpacing: '-.3px', background: 'linear-gradient(135deg,#FF7854,#FD267A)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
+          winder
         </div>
         <button onClick={() => setSettingsOpen(true)}
           className="w-10 h-10 rounded-[12px] border-none flex items-center justify-center cursor-pointer"
