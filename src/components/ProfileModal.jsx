@@ -3,14 +3,19 @@ import { distLabel } from '../data/seed';
 
 export default function ProfileModal({ profile, startIndex = 0, onClose, onNope, onLike }) {
   const [idx, setIdx] = useState(startIndex);
+  const [closing, setClosing] = useState(false);
 
   if (!profile) return null;
 
   const prev = () => setIdx((i) => (i - 1 + profile.images.length) % profile.images.length);
   const next = () => setIdx((i) => (i + 1) % profile.images.length);
 
+  const close = () => { setClosing(true); setTimeout(onClose, 280); };
+  const closeNope = () => { setClosing(true); setTimeout(onNope, 280); };
+  const closeLike = () => { setClosing(true); setTimeout(onLike, 280); };
+
   return (
-    <div className="absolute inset-0 z-40 bg-white flex flex-col animate-mwSheet">
+    <div className={`absolute inset-0 z-40 bg-white flex flex-col ${closing ? 'animate-mwSheetOut' : 'animate-mwSheet'}`}>
       <div className="hide-scrollbar flex-1 overflow-y-auto">
         {/* Carousel */}
         <div className="relative" style={{ height: '62vh', minHeight: 380 }}>
@@ -35,7 +40,7 @@ export default function ProfileModal({ profile, startIndex = 0, onClose, onNope,
           </div>
 
           {/* Close button */}
-          <button onClick={onClose} className="absolute top-[42px] right-4 z-[4] w-[42px] h-[42px] rounded-full border-none flex items-center justify-center cursor-pointer"
+          <button onClick={close} className="absolute top-[42px] right-4 z-[4] w-[42px] h-[42px] rounded-full border-none flex items-center justify-center cursor-pointer"
             style={{ background: 'rgba(255,255,255,.92)', color: '#FD267A', boxShadow: '0 6px 16px rgba(0,0,0,.18)' }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 9l6 6 6-6"/>
@@ -109,13 +114,13 @@ export default function ProfileModal({ profile, startIndex = 0, onClose, onNope,
 
       {/* Action bar */}
       <div className="flex items-center justify-center gap-[22px] py-[14px] pb-5 border-t flex-shrink-0 bg-white" style={{ borderColor: '#f3e7ec' }}>
-        <button onClick={onNope} className="w-[58px] h-[58px] rounded-full border-none flex items-center justify-center cursor-pointer"
+        <button onClick={closeNope} className="w-[58px] h-[58px] rounded-full border-none flex items-center justify-center cursor-pointer"
           style={{ background: '#fff', color: '#FF4F6B', boxShadow: '0 8px 20px rgba(255,79,107,.22)' }}>
           <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round">
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
         </button>
-        <button onClick={onLike} className="w-[58px] h-[58px] rounded-full border-none flex items-center justify-center cursor-pointer"
+        <button onClick={closeLike} className="w-[58px] h-[58px] rounded-full border-none flex items-center justify-center cursor-pointer"
           style={{ background: 'linear-gradient(135deg,#FF7854,#FD267A)', color: '#fff', boxShadow: '0 10px 24px rgba(253,38,122,.38)' }}>
           <svg width="27" height="27" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 21s-8.5-5.6-8.5-11.2A4.8 4.8 0 0 1 12 6.5a4.8 4.8 0 0 1 8.5 3.3C20.5 15.4 12 21 12 21z"/>

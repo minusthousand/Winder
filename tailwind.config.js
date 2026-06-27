@@ -33,12 +33,22 @@ export default {
           from: { opacity: '0' },
           to: { opacity: '1' },
         },
+        mwSheetOut: {
+          from: { transform: 'translateY(0)' },
+          to: { transform: 'translateY(100%)' },
+        },
+        mwFadeOut: {
+          from: { opacity: '1' },
+          to: { opacity: '0' },
+        },
       },
       animation: {
         mwPop: 'mwPop .5s forwards',
         mwSheet: 'mwSheet .32s cubic-bezier(.2,.8,.25,1)',
         mwFade: 'mwFade .22s',
         mwHeartBurst: 'mwHeartBurst .7s forwards',
+        mwSheetOut: 'mwSheetOut .28s cubic-bezier(.4,0,1,1) forwards',
+        mwFadeOut: 'mwFadeOut .22s forwards',
       },
     },
   },

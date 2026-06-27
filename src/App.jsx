@@ -17,28 +17,66 @@ function persist(profiles, index) {
   ls.set('mw_index', index);
 }
 
-// ---- Sheet grab-to-close hook ----
-function useSheetClose(onClose) {
+// ---- Sheet grab-to-close hook (with live drag tracking) ----
+function useGrabClose(onDismiss) {
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
   const startY = useRef(null);
-  const dy = useRef(0);
-  return {
-    onPointerDown: (e) => { try { e.currentTarget.setPointerCapture(e.pointerId); } catch {} startY.current = e.clientY; dy.current = 0; },
-    onPointerMove: (e) => { if (startY.current !== null) dy.current = e.clientY - startY.current; },
-    onPointerUp: () => { if (dy.current > 40) onClose(); startY.current = null; dy.current = 0; },
-    onPointerCancel: () => { startY.current = null; dy.current = 0; },
+  const liveDY = useRef(0);
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
+  const handleDown = (e) => {
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
+    startY.current = e.clientY;
+    liveDY.current = 0;
+    setDragging(true);
   };
+  const handleMove = (e) => {
+    if (startY.current === null) return;
+    const d = Math.max(0, e.clientY - startY.current);
+    liveDY.current = d;
+    setDragY(d);
+  };
+  const handleUp = () => {
+    setDragging(false);
+    if (liveDY.current > 80) onDismissRef.current();
+    else setDragY(0);
+    startY.current = null;
+    liveDY.current = 0;
+  };
+  const handleCancel = () => {
+    setDragging(false);
+    setDragY(0);
+    startY.current = null;
+    liveDY.current = 0;
+  };
+
+  const grabProps = { onPointerDown: handleDown, onPointerMove: handleMove, onPointerUp: handleUp, onPointerCancel: handleCancel };
+  // Use CSS `translate` (independent of `transform`) so drag doesn't fight CSS open/close animations
+  const panelTranslate = (dragging || dragY > 0) ? `0 ${dragY}px` : undefined;
+
+  return { grabProps, panelTranslate };
 }
 
 // ---- Login sheet ----
 function LoginSheet({ onClose, onSuccess }) {
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
-  const grab = useSheetClose(onClose);
+  const [closing, setClosing] = useState(false);
+
+  const dismiss = useCallback(() => {
+    setClosing(true);
+    setTimeout(onClose, 280);
+  }, [onClose]);
+
+  const { grabProps, panelTranslate } = useGrabClose(dismiss);
 
   const submit = () => {
     if (pw.trim().toLowerCase() === 'admin') {
       ls.set('mw_admin', '1');
-      onSuccess();
+      setClosing(true);
+      setTimeout(onSuccess, 280);
     } else {
       setErr('Incorrect password. Try "admin".');
     }
@@ -51,11 +89,11 @@ function LoginSheet({ onClose, onSuccess }) {
   };
 
   return (
-    <div onClick={onClose} className="absolute inset-0 z-50 flex items-end animate-mwFade"
+    <div onClick={dismiss} className={`absolute inset-0 z-50 flex items-end ${closing ? 'animate-mwFadeOut' : 'animate-mwFade'}`}
       style={{ background: 'rgba(28,14,30,.5)', backdropFilter: 'blur(3px)' }}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full animate-mwSheet"
-        style={{ background: '#fff', borderRadius: '26px 26px 0 0', padding: '26px 24px 30px' }}>
-        <div {...grab} className="flex justify-center items-center cursor-grab touch-none" style={{ height: 26, margin: '-8px 0 8px' }}>
+      <div onClick={(e) => e.stopPropagation()} className={`w-full ${closing ? 'animate-mwSheetOut' : 'animate-mwSheet'}`}
+        style={{ translate: panelTranslate, background: '#fff', borderRadius: '26px 26px 0 0', padding: '26px 24px 30px' }}>
+        <div {...grabProps} className="flex justify-center items-center cursor-grab touch-none" style={{ height: 26, margin: '-8px 0 8px' }}>
           <div style={{ width: 42, height: 5, borderRadius: 99, background: '#eadfe4' }} />
         </div>
         <div className="w-[54px] h-[54px] rounded-2xl flex items-center justify-center mx-auto mb-4"
@@ -85,18 +123,26 @@ function LoginSheet({ onClose, onSuccess }) {
 
 // ---- Settings sheet ----
 function SettingsSheet({ isAdmin, onClose, onLoginOpen, onAddOpen, onLogout }) {
-  const grab = useSheetClose(onClose);
+  const [closing, setClosing] = useState(false);
+
+  const dismiss = useCallback(() => {
+    setClosing(true);
+    setTimeout(onClose, 280);
+  }, [onClose]);
+
+  const { grabProps, panelTranslate } = useGrabClose(dismiss);
+
   return (
-    <div onClick={onClose} className="absolute inset-0 z-50 flex items-end animate-mwFade"
+    <div onClick={dismiss} className={`absolute inset-0 z-50 flex items-end ${closing ? 'animate-mwFadeOut' : 'animate-mwFade'}`}
       style={{ background: 'rgba(28,14,30,.5)', backdropFilter: 'blur(3px)' }}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full animate-mwSheet"
-        style={{ background: '#fff', borderRadius: '26px 26px 0 0', padding: '22px 22px 30px' }}>
-        <div {...grab} className="flex justify-center items-center cursor-grab touch-none" style={{ height: 26, margin: '-8px 0 6px' }}>
+      <div onClick={(e) => e.stopPropagation()} className={`w-full ${closing ? 'animate-mwSheetOut' : 'animate-mwSheet'}`}
+        style={{ translate: panelTranslate, background: '#fff', borderRadius: '26px 26px 0 0', padding: '22px 22px 30px' }}>
+        <div {...grabProps} className="flex justify-center items-center cursor-grab touch-none" style={{ height: 26, margin: '-8px 0 6px' }}>
           <div style={{ width: 42, height: 5, borderRadius: 99, background: '#eadfe4' }} />
         </div>
         <div className="flex items-center justify-between mb-[6px]">
           <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: 21, color: '#3a2740' }}>Settings</div>
-          <button onClick={onClose} className="w-[34px] h-[34px] rounded-full border-none flex items-center justify-center cursor-pointer"
+          <button onClick={dismiss} className="w-[34px] h-[34px] rounded-full border-none flex items-center justify-center cursor-pointer"
             style={{ background: '#f6eef1', color: '#9b8aa3' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
               <path d="M18 6L6 18M6 6l12 12"/>
@@ -232,6 +278,7 @@ export default function App() {
   const onRewind = () => {
     if (!history.length) return;
     const last = history[history.length - 1];
+    cardStackRef.current?.startRewind();
     persist(profiles, last);
     setIndex(last);
     setHistory((h) => h.slice(0, -1));

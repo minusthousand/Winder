@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 
 const inputStyle = {
   width: '100%', padding: '12px 14px', border: '1.5px solid #f0e3e9',
@@ -14,9 +14,16 @@ function defaultImg() {
 export default function AddProfileForm({ onClose, onAdd }) {
   const [form, setForm] = useState({ name: '', age: '', bio: '', job: '', location: '', interests: '', images: '' });
   const [error, setError] = useState('');
-  const sheetRef = useRef(null);
-  const handleStartY = useRef(null);
-  const handleDy = useRef(0);
+  const [closing, setClosing] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startY = useRef(null);
+  const liveDY = useRef(0);
+
+  const dismiss = useCallback(() => {
+    setClosing(true);
+    setTimeout(onClose, 280);
+  }, [onClose]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -42,24 +49,32 @@ export default function AddProfileForm({ onClose, onAdd }) {
 
   const onHandleDown = (e) => {
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
-    handleStartY.current = e.clientY;
-    handleDy.current = 0;
+    startY.current = e.clientY;
+    liveDY.current = 0;
+    setDragging(true);
   };
   const onHandleMove = (e) => {
-    if (handleStartY.current === null) return;
-    handleDy.current = e.clientY - handleStartY.current;
+    if (startY.current === null) return;
+    const d = Math.max(0, e.clientY - startY.current);
+    liveDY.current = d;
+    setDragY(d);
   };
   const onHandleUp = () => {
-    if (handleDy.current > 40) onClose();
-    handleStartY.current = null;
+    setDragging(false);
+    if (liveDY.current > 80) dismiss();
+    else setDragY(0);
+    startY.current = null;
+    liveDY.current = 0;
   };
 
+  const panelTranslate = (dragging || dragY > 0) ? `0 ${dragY}px` : undefined;
+
   return (
-    <div onClick={onClose} className="absolute inset-0 z-50 flex items-end animate-mwFade"
+    <div onClick={dismiss} className={`absolute inset-0 z-50 flex items-end ${closing ? 'animate-mwFadeOut' : 'animate-mwFade'}`}
       style={{ background: 'rgba(28,14,30,.5)', backdropFilter: 'blur(3px)' }}>
-      <div onClick={(e) => e.stopPropagation()} ref={sheetRef}
-        className="hide-scrollbar w-full overflow-y-auto animate-mwSheet"
-        style={{ maxHeight: '92%', background: '#fff', borderRadius: '26px 26px 0 0', padding: '22px 22px 28px' }}>
+      <div onClick={(e) => e.stopPropagation()}
+        className={`hide-scrollbar w-full overflow-y-auto ${closing ? 'animate-mwSheetOut' : 'animate-mwSheet'}`}
+        style={{ translate: panelTranslate, maxHeight: '92%', background: '#fff', borderRadius: '26px 26px 0 0', padding: '22px 22px 28px' }}>
 
         {/* Grab handle */}
         <div onPointerDown={onHandleDown} onPointerMove={onHandleMove} onPointerUp={onHandleUp} onPointerCancel={onHandleUp}
@@ -69,7 +84,7 @@ export default function AddProfileForm({ onClose, onAdd }) {
 
         <div className="flex items-center justify-between mb-[18px]">
           <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: 21, color: '#3a2740' }}>New profile</div>
-          <button onClick={onClose} className="w-[34px] h-[34px] rounded-full border-none flex items-center justify-center cursor-pointer"
+          <button onClick={dismiss} className="w-[34px] h-[34px] rounded-full border-none flex items-center justify-center cursor-pointer"
             style={{ background: '#f6eef1', color: '#9b8aa3' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
               <path d="M18 6L6 18M6 6l12 12"/>

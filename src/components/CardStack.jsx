@@ -1,13 +1,23 @@
 import { useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { distLabel } from '../data/seed';
 
-function SwipeCard({ profile, isTop, dragState, photoIndex, onPointerDown, onPointerMove, onPointerUp, onOpenInfo }) {
+function SwipeCard({ profile, isTop, dragState, photoIndex, rewindEnter, topEnter, onPointerDown, onPointerMove, onPointerUp, onOpenInfo }) {
   const d = isTop ? (dragState || { x: 0, y: 0, active: false }) : { x: 0, y: 0, active: false };
   const rot = d.x * 0.035;
 
-  const transform = isTop
-    ? `translate(${d.x}px,${d.y}px) rotate(${rot}deg)`
-    : undefined;
+  let transform, transition;
+  if (isTop) {
+    if (rewindEnter) {
+      transform = 'translateX(-700px)';
+      transition = 'none';
+    } else if (topEnter) {
+      transform = 'translateY(14px) scale(0.94)';
+      transition = 'none';
+    } else {
+      transform = `translate(${d.x}px,${d.y}px) rotate(${rot}deg)`;
+      transition = d.active ? 'none' : 'transform .38s cubic-bezier(.2,.7,.3,1.2)';
+    }
+  }
 
   const likeOp = isTop ? Math.max(0, Math.min(1, d.x / 120)) : 0;
   const nopeOp = isTop ? Math.max(0, Math.min(1, -d.x / 120)) : 0;
@@ -20,7 +30,7 @@ function SwipeCard({ profile, isTop, dragState, photoIndex, onPointerDown, onPoi
         position: 'absolute',
         inset: 0,
         transform,
-        transition: isTop ? (d.active ? 'none' : 'transform .34s cubic-bezier(.2,.7,.3,1.2)') : undefined,
+        transition,
         zIndex: isTop ? 30 : 20,
         pointerEvents: isTop ? 'auto' : 'none',
         cursor: isTop ? 'grab' : 'default',
@@ -117,6 +127,8 @@ function SwipeCard({ profile, isTop, dragState, photoIndex, onPointerDown, onPoi
 const CardStack = forwardRef(function CardStack({ profiles, index, onSwipe, onOpenDetail, onResetDeck }, ref) {
   const [drag, setDrag] = useState(null);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [rewindEnter, setRewindEnter] = useState(false);
+  const [topEnter, setTopEnter] = useState(false);
   const dragging = useRef(false);
   const startPos = useRef({ x: 0, y: 0 });
   const moved = useRef(0);
@@ -133,6 +145,8 @@ const CardStack = forwardRef(function CardStack({ profiles, index, onSwipe, onOp
     swipeTimer.current = setTimeout(() => {
       setDrag(null);
       setPhotoIndex(0);
+      setTopEnter(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => setTopEnter(false)));
       onSwipe(dir, superLike, topProfile);
     }, 320);
   }, [topProfile, onSwipe]);
@@ -184,6 +198,10 @@ const CardStack = forwardRef(function CardStack({ profiles, index, onSwipe, onOp
   useImperativeHandle(ref, () => ({
     triggerSwipe,
     resetPhoto: () => setPhotoIndex(0),
+    startRewind: () => {
+      setRewindEnter(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => setRewindEnter(false)));
+    },
   }), [triggerSwipe]);
 
   if (deckEmpty) {
@@ -246,6 +264,8 @@ const CardStack = forwardRef(function CardStack({ profiles, index, onSwipe, onOp
             isTop={true}
             dragState={drag}
             photoIndex={photoIndex}
+            rewindEnter={rewindEnter}
+            topEnter={topEnter}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
