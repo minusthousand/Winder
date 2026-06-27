@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { SEED_PROFILES } from './data/seed';
+import { fetchProfiles, insertProfile, seedProfiles } from './lib/db';
 import CardStack from './components/CardStack';
 import ProfileModal from './components/ProfileModal';
 import AddProfileForm from './components/AddProfileForm';
@@ -244,6 +245,7 @@ export default function App() {
   const [index, setIndex] = useState(0);
   const [history, setHistory] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -254,32 +256,40 @@ export default function App() {
   const cardStackRef = useRef(null);
 
   useEffect(() => {
-    let profs = ls.get('mw_profiles');
-    if (!profs || !profs.length) {
-      profs = SEED_PROFILES;
-      ls.set('mw_profiles', profs);
-    }
-    let idx = ls.get('mw_index') || 0;
-    if (idx > profs.length) idx = 0;
     const admin = ls.get('mw_admin') === '1';
-    setProfiles(profs);
-    setIndex(idx);
     setIsAdmin(admin);
+
+    let idx = ls.get('mw_index') || 0;
+
+    fetchProfiles()
+      .then(async (profs) => {
+        if (!profs.length) profs = await seedProfiles(SEED_PROFILES);
+        if (idx > profs.length) idx = 0;
+        setProfiles(profs);
+        setIndex(idx);
+      })
+      .catch(() => {
+        const profs = SEED_PROFILES;
+        if (idx > profs.length) idx = 0;
+        setProfiles(profs);
+        setIndex(idx);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const doSwipe = useCallback((dir, superLike, profile) => {
     setHistory((h) => [...h, index]);
     const newIndex = index + 1;
-    persist(profiles, newIndex);
+    ls.set('mw_index', newIndex);
     setIndex(newIndex);
     if (dir === 'right' && (superLike || profile.likesYou)) setMatchProfile(profile);
-  }, [index, profiles]);
+  }, [index]);
 
   const onRewind = () => {
     if (!history.length) return;
     const last = history[history.length - 1];
     cardStackRef.current?.startRewind();
-    persist(profiles, last);
+    ls.set('mw_index', last);
     setIndex(last);
     setHistory((h) => h.slice(0, -1));
     if (cardStackRef.current) cardStackRef.current.resetPhoto();
@@ -288,12 +298,15 @@ export default function App() {
   const onNope = () => { if (cardStackRef.current) cardStackRef.current.triggerSwipe('left'); };
   const onLike = () => { if (cardStackRef.current) cardStackRef.current.triggerSwipe('right'); };
   const onStar = () => { if (cardStackRef.current) cardStackRef.current.triggerSwipe('right', true); };
-  const onResetDeck = () => { persist(profiles, 0); setIndex(0); setHistory([]); };
+  const onResetDeck = () => { ls.set('mw_index', 0); setIndex(0); setHistory([]); };
 
-  const onAddProfile = (profile) => {
-    const updated = [profile, ...profiles];
-    persist(updated, index);
-    setProfiles(updated);
+  const onAddProfile = async (profile) => {
+    try {
+      const saved = await insertProfile(profile);
+      setProfiles((prev) => [saved, ...prev]);
+    } catch {
+      setProfiles((prev) => [profile, ...prev]);
+    }
     setAddOpen(false);
   };
 
@@ -302,17 +315,29 @@ export default function App() {
   const detailNope = () => { closeDetail(); setTimeout(() => cardStackRef.current?.triggerSwipe('left'), 60); };
   const detailLike = () => { closeDetail(); setTimeout(() => cardStackRef.current?.triggerSwipe('right'), 60); };
 
+  const shell = {
+    position: 'relative',
+    width: 'min(440px, 100vw)',
+    height: 'min(932px, 100dvh)',
+    background: 'linear-gradient(180deg,#fff6f2 0%, #ffeef0 100%)',
+    display: 'flex',
+    flexDirection: 'column',
+  };
+
+  if (loading) {
+    return (
+      <div style={{ ...shell, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+        <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, fontSize: 32, background: 'linear-gradient(135deg,#FF7854,#FD267A)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
+          winder
+        </div>
+        <div style={{ width: 34, height: 34, border: '3px solid #f0e3e9', borderTopColor: '#FD267A', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   return (
-    <div style={{
-      position: 'relative',
-      width: 'min(440px, 100vw)',
-      height: 'min(932px, 100dvh)',
-      background: 'linear-gradient(180deg,#fff6f2 0%, #ffeef0 100%)',
-      overflow: 'hidden',
-      boxShadow: '0 30px 80px rgba(0,0,0,.45)',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
+    <div style={{ ...shell, overflow: 'hidden', boxShadow: '0 30px 80px rgba(0,0,0,.45)' }}>
       {/* Header */}
       <div className="flex items-center justify-between flex-shrink-0" style={{ padding: '16px 18px 10px' }}>
         <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, fontSize: 21, letterSpacing: '-.3px', background: 'linear-gradient(135deg,#FF7854,#FD267A)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
