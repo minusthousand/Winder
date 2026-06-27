@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 
 const inputStyle = {
   width: '100%', padding: '12px 14px', border: '1.5px solid #f0e3e9',
-  borderRadius: 13, fontSize: 14.5, fontFamily: "'Plus Jakarta Sans',sans-serif",
+  borderRadius: 13, fontSize: 16, fontFamily: "'Plus Jakarta Sans',sans-serif",
   color: '#3a2740', outline: 'none', background: '#fdfafb',
 };
 const labelStyle = { fontSize: 12.5, fontWeight: 700, color: '#7a6680', margin: '15px 0 7px', display: 'block' };

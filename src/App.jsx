@@ -84,7 +84,7 @@ function LoginSheet({ onClose, onSuccess }) {
 
   const inputStyle = {
     width: '100%', padding: '12px 14px', marginTop: 20, border: '1.5px solid #f0e3e9',
-    borderRadius: 13, fontSize: 14.5, fontFamily: "'Plus Jakarta Sans',sans-serif",
+    borderRadius: 13, fontSize: 16, fontFamily: "'Plus Jakarta Sans',sans-serif",
     color: '#3a2740', outline: 'none', background: '#fdfafb', textAlign: 'center', letterSpacing: 2,
   };
 
